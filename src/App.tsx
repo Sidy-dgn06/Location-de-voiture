@@ -1,6 +1,3 @@
-// src/App.tsx
-// Personne 4 — feature/components-routing
-
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
 import Navbar from './components/Navbar';
