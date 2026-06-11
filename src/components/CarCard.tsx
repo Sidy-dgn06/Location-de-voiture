@@ -1,6 +1,4 @@
 
-// src/components/CarCard.tsx
-// Personne 4 — feature/components-routing
 import type { Car } from '../types';
 
 interface CarCardProps {

@@ -1,5 +1,3 @@
-// src/types/index.ts
-// Personne 4 — feature/components-routing
 
 export interface Car {
   id: number;
