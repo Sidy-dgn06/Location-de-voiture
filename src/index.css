@@ -1,3 +1,21 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Scroll smooth pour les ancres */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Scrollbar personnalisée */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e3a5f;
+  border-radius: 3px;
+}
