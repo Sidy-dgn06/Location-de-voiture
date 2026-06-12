@@ -1,69 +1,76 @@
+// src/pages/LoginPage.tsx
+// Personne 2 — feature/auth-pages
+
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { login, getSession } from '../utils/auth';
 
 export default function LoginPage() {
   const navigate = useNavigate();
-
-  // États du formulaire
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Gestion de la soumission du formulaire
-  const handleSubmit = async (e: React.FormEvent) => {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError('');
 
-    // Validation simple
-    if (!email || !password) {
+    if (!email.trim() || !password.trim()) {
       setError('Veuillez remplir tous les champs.');
       return;
     }
 
     setLoading(true);
+    const result = login(email.trim(), password);
+    setLoading(false);
 
-    // Simulation d'une connexion (en vrai, appel API ici)
-    setTimeout(() => {
-      setLoading(false);
-      // Rediriger vers le dashboard après connexion
+    if (!result.success) {
+      setError(result.message);
+      return;
+    }
+
+    const session = getSession();
+    if (session?.role === 'admin') {
       navigate('/dashboard');
-    }, 1500);
-  };
+    } else {
+      navigate('/');
+    }
+  }
 
   return (
     <div className="min-h-[calc(100vh-64px)] flex">
-      {/* Colonne gauche — image décorative */}
+
+      {/* Côté gauche décoratif */}
       <div className="hidden lg:flex flex-1 bg-blue-900 items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-950 to-blue-800"></div>
-        <div className="relative z-10 text-center px-12">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-950 to-blue-800" />
+        <div className="relative z-10 text-center px-12 max-w-md">
           <div className="w-24 h-24 bg-amber-400 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl">
             <span className="text-blue-900 font-black text-4xl">C</span>
           </div>
           <h2 className="text-3xl font-black text-white mb-4">Bienvenue sur CarRent</h2>
-          <p className="text-blue-200 text-lg leading-relaxed">
-            Connectez-vous pour accéder à vos réservations et gérer votre compte.
+          <p className="text-blue-200 text-lg leading-relaxed mb-10">
+            Connectez-vous pour accéder à votre compte.
           </p>
-          <img
-            src="https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=500&q=80"
-            alt="Voiture"
-            className="mt-10 rounded-2xl opacity-60 w-full max-w-sm mx-auto"
-          />
         </div>
       </div>
 
-      {/* Colonne droite — formulaire */}
+      {/* Formulaire */}
       <div className="flex-1 flex items-center justify-center px-6 py-12 bg-gray-50">
         <div className="w-full max-w-md">
-          {/* En-tête */}
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center gap-2 mb-4 lg:hidden">
-              <div className="w-10 h-10 bg-blue-900 rounded-full flex items-center justify-center">
-                <span className="text-amber-400 font-black text-xl">C</span>
-              </div>
-              <span className="text-blue-900 font-bold text-2xl">Car<span className="text-amber-400">Rent</span></span>
+
+          {/* Logo mobile */}
+          <div className="flex items-center justify-center gap-2 mb-6 lg:hidden">
+            <div className="w-10 h-10 bg-blue-900 rounded-full flex items-center justify-center">
+              <span className="text-amber-400 font-black text-xl">C</span>
             </div>
+            <span className="text-blue-900 font-bold text-2xl">
+              Car<span className="text-amber-400">Rent</span>
+            </span>
+          </div>
+
+          <div className="text-center mb-8">
             <h1 className="text-2xl font-black text-blue-900">Se connecter</h1>
             <p className="text-gray-500 mt-1 text-sm">
               Pas encore de compte ?{' '}
@@ -73,9 +80,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* Formulaire */}
           <div className="bg-white rounded-3xl shadow-lg p-8">
-            {/* Message d'erreur */}
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-6">
                 ⚠️ {error}
@@ -83,6 +88,7 @@ export default function LoginPage() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
+
               {/* Email */}
               <div>
                 <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
@@ -117,14 +123,14 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 text-sm"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
+                    aria-label="Afficher le mot de passe"
                   >
                     {showPassword ? '🙈' : '👁️'}
                   </button>
                 </div>
               </div>
 
-              {/* Mot de passe oublié */}
               <div className="text-right">
                 <Link
                   to="/reset-password"
@@ -134,19 +140,18 @@ export default function LoginPage() {
                 </Link>
               </div>
 
-              {/* Bouton soumettre */}
               <button
                 type="submit"
                 disabled={loading}
                 className={`w-full py-4 rounded-2xl font-bold text-lg transition-all ${
                   loading
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-blue-900 hover:bg-blue-800 text-white hover:scale-[1.02] shadow-md'
+                    : 'bg-blue-900 hover:bg-blue-800 text-white shadow-md'
                 }`}
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
-                    <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     Connexion...
                   </span>
                 ) : (
@@ -154,19 +159,6 @@ export default function LoginPage() {
                 )}
               </button>
             </form>
-
-            {/* Séparateur */}
-            <div className="flex items-center my-6">
-              <div className="flex-1 border-t border-gray-200"></div>
-              <span className="px-4 text-xs text-gray-400">ou continuer avec</span>
-              <div className="flex-1 border-t border-gray-200"></div>
-            </div>
-
-            {/* Bouton Google (décoratif) */}
-            <button className="w-full border border-gray-200 hover:bg-gray-50 py-3 rounded-xl flex items-center justify-center gap-3 transition-colors text-sm font-medium text-gray-700">
-              <span className="text-lg">🔵</span>
-              Continuer avec Google
-            </button>
           </div>
         </div>
       </div>
