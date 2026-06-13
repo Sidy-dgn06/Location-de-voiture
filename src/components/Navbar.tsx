@@ -1,5 +1,3 @@
-// src/components/Navbar.tsx
-// Personne 4 — feature/components-routing
 
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -41,7 +39,7 @@ export default function Navbar() {
           {/* Liens desktop */}
           <div className="hidden md:flex items-center gap-8">
             <Link to="/" className={navLink('/')}>Accueil</Link>
-            <a href="/#vehicles" className="text-gray-200 hover:text-amber-400 transition-colors">Véhicules</a>
+            <a href="/#vehicules" className="text-gray-200 hover:text-amber-400 transition-colors">Véhicules</a>
             <a href="/#contact" className="text-gray-200 hover:text-amber-400 transition-colors">Contact</a>
           </div>
 
