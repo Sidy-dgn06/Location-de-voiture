@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getSession, logout } from '../utils/auth';
@@ -114,7 +115,7 @@ export default function Navbar() {
       {menuOpen && (
         <div className="md:hidden bg-blue-800 px-4 py-4 flex flex-col gap-4">
           <Link to="/" className="text-gray-200 hover:text-amber-400 transition-colors" onClick={() => setMenuOpen(false)}>Accueil</Link>
-          <a href="/#vehicles" className="text-gray-200 hover:text-amber-400 transition-colors" onClick={() => setMenuOpen(false)}>Véhicules</a>
+          <a href="/#vehicules" className="text-gray-200 hover:text-amber-400 transition-colors" onClick={() => setMenuOpen(false)}>Véhicules</a>
           <Link to="/cart" className="text-gray-200 hover:text-amber-400 transition-colors" onClick={() => setMenuOpen(false)}>
             Panier {totalItems > 0 && `(${totalItems})`}
           </Link>
