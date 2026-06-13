@@ -1,5 +1,3 @@
-// src/utils/auth.ts
-// Personne 4 — feature/components-routing
 
 export interface StoredUser {
   id: string;
