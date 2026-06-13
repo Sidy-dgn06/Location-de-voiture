@@ -1,3 +1,4 @@
+
 export interface StoredUser {
   id: string;
   fullName: string;
