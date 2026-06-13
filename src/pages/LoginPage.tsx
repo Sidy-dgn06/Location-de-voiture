@@ -1,5 +1,4 @@
-// src/pages/LoginPage.tsx
-// Personne 2 — feature/auth-pages
+
 
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';

@@ -1,3 +1,5 @@
+// src/data/mockData.ts
+// Personne 4 — feature/components-routing
 
 import type { Car, Reservation, Testimonial, DashboardStats } from '../types';
 
@@ -92,7 +94,7 @@ export const cars: Car[] = [
     rating: 4.6,
     reviews: 91,
   },
-   {
+  {
     id: 7,
     brand: 'Porsche',
     model: 'Panamera',
@@ -152,7 +154,6 @@ export const cars: Car[] = [
     rating: 4.8,
     reviews: 140,
   },
-
 ];
 
 export const reservations: Reservation[] = [
