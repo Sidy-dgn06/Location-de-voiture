@@ -1,5 +1,4 @@
-// src/components/Footer.tsx
-// Personne 4 — feature/components-routing
+
 
 import { Link } from 'react-router-dom';
 

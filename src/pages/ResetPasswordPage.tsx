@@ -1,5 +1,3 @@
-// src/pages/ResetPasswordPage.tsx
-// Personne 2 — feature/auth-pages
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';

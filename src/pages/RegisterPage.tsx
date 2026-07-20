@@ -42,7 +42,7 @@ export default function RegisterPage() {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError('');
 
@@ -62,7 +62,7 @@ export default function RegisterPage() {
     }
 
     setLoading(true);
-    const result = register(fullName.trim(), email.trim(), phone.trim(), password);
+    const result = await register(fullName.trim(), email.trim(), phone.trim(), password);
     setLoading(false);
 
     if (!result.success) {

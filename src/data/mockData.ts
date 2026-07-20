@@ -1,5 +1,3 @@
-// src/data/mockData.ts
-// Personne 4 — feature/components-routing
 
 import type { Car, Reservation, Testimonial, DashboardStats } from '../types';
 
