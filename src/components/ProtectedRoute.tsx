@@ -1,5 +1,4 @@
-// src/components/ProtectedRoute.tsx
-// Personne 4 — feature/components-routing
+
 
 import { Navigate } from 'react-router-dom';
 import { getSession } from '../utils/auth';

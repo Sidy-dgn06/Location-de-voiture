@@ -1,28 +1,91 @@
 
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CarCard from '../components/CarCard';
-import { cars, testimonials } from '../data/mockData';
+import { fetchJson } from '../utils/api';
+import { testimonials, cars as defaultCars } from '../data/mockData';
 import { useCart } from '../context/CartContext';
 import type { Car } from '../types';
+
+interface WeatherData {
+  name: string;
+  weather: Array<{ description: string; icon: string }>;
+  main: { temp: number; humidity: number };
+  wind: { speed: number };
+}
 
 export default function LandingPage() {
   const navigate = useNavigate();
   const { addItem } = useCart();
   const [selectedCategory, setSelectedCategory] = useState<string>('tous');
+  const [cars, setCars] = useState<Car[]>([]);
+  const [carsLoading, setCarsLoading] = useState(true);
+  const [carsError, setCarsError] = useState('');
   const [reservationModal, setReservationModal] = useState<{ isOpen: boolean; car: Car | null }>({
     isOpen: false,
     car: null,
   });
+  const today = new Date().toISOString().split('T')[0];
   const [reservationDates, setReservationDates] = useState<{ startDate: string; endDate: string }>({
-    startDate: new Date().toISOString().split('T')[0],
+    startDate: today,
     endDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
   });
   const [notification, setNotification] = useState<{ show: boolean; message: string }>({
     show: false,
     message: '',
   });
+  const [dateError, setDateError] = useState<string>('');
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [weatherLoading, setWeatherLoading] = useState(true);
+  const [weatherError, setWeatherError] = useState('');
+
+  const getNextDayDate = (dateString: string) => {
+    const date = new Date(dateString);
+    date.setDate(date.getDate() + 1);
+    return date.toISOString().split('T')[0];
+  };
+
+  const loadWeather = async () => {
+    setWeatherLoading(true);
+    setWeatherError('');
+
+    try {
+      const data = await fetchJson<WeatherData>('/weather?city=Dakar');
+      setWeather(data);
+    } catch (error: any) {
+      setWeatherError(error?.message || 'Impossible de récupérer la météo.');
+    } finally {
+      setWeatherLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const loadCars = async () => {
+      setCarsLoading(true);
+      setCarsError('');
+
+      try {
+        const data = await fetchJson<Car[]>('/cars');
+        if (data.length === 0) {
+          setCarsError('Aucun véhicule trouvé sur le serveur. Affichage des données locales.');
+          setCars(defaultCars);
+        } else {
+          setCars(data);
+        }
+      } catch (error: any) {
+        setCarsError(
+          error?.message || 'Impossible de récupérer la liste des véhicules depuis le serveur. Affichage des données locales.',
+        );
+        setCars(defaultCars);
+      } finally {
+        setCarsLoading(false);
+      }
+    };
+
+    loadCars();
+    loadWeather();
+  }, []);
 
   // Filtrer les voitures par catégorie
   const filteredCars =
@@ -37,11 +100,20 @@ export default function LandingPage() {
 
   const handleConfirmReservation = () => {
     if (reservationModal.car && reservationDates.startDate && reservationDates.endDate) {
-      if (reservationDates.startDate >= reservationDates.endDate) {
-        alert('La date de fin doit être après la date de début');
+      const start = new Date(reservationDates.startDate).getTime();
+      const end = new Date(reservationDates.endDate).getTime();
+
+      if (start < new Date(today).getTime()) {
+        setDateError('La date de départ ne peut pas être antérieure à aujourd\'hui.');
         return;
       }
-      
+      if (start >= end) {
+        setDateError('La date de retour doit être après la date de départ.');
+        return;
+      }
+
+      setDateError('');
+
       // Ajouter la voiture au panier avec les dates choisies
       addItem(reservationModal.car, reservationDates.startDate, reservationDates.endDate);
 
@@ -130,10 +202,23 @@ export default function LandingPage() {
                 </label>
                 <input
                   type="date"
+                  min={today}
                   value={reservationDates.startDate}
-                  onChange={(e) =>
-                    setReservationDates({ ...reservationDates, startDate: e.target.value })
-                  }
+                  onChange={(e) => {
+                    let newStartDate = e.target.value;
+                    if (newStartDate < today) {
+                      newStartDate = today;
+                    }
+                    setDateError('');
+                    setReservationDates((prev) => ({
+                      ...prev,
+                      startDate: newStartDate,
+                      endDate:
+                        prev.endDate <= newStartDate
+                          ? getNextDayDate(newStartDate)
+                          : prev.endDate,
+                    }));
+                  }}
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -143,6 +228,7 @@ export default function LandingPage() {
                 </label>
                 <input
                   type="date"
+                  min={getNextDayDate(reservationDates.startDate)}
                   value={reservationDates.endDate}
                   onChange={(e) =>
                     setReservationDates({ ...reservationDates, endDate: e.target.value })
@@ -150,6 +236,9 @@ export default function LandingPage() {
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
+              {dateError && (
+                <p className="text-sm text-red-600 mt-1">{dateError}</p>
+              )}
             </div>
 
             {/* Calcul du prix */}
@@ -242,6 +331,49 @@ export default function LandingPage() {
               >
                 S'inscrire gratuitement
               </button>
+            </div>
+
+            {/* Météo */}
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-3xl mx-auto lg:mx-0">
+              {weatherLoading ? (
+                <div className="rounded-3xl bg-white/10 border border-white/20 p-5 text-white flex items-center justify-center">
+                  Chargement de la météo...
+                </div>
+              ) : weather ? (
+                <>
+                  <div className="rounded-3xl bg-white/10 border border-white/20 p-5">
+                    <p className="text-sm uppercase tracking-[0.18em] text-blue-200">Météo à {weather.name}</p>
+                    <div className="mt-4 flex items-center gap-4">
+                      <div>
+                        <p className="text-5xl font-black text-white">{Math.round(weather.main.temp)}°C</p>
+                        <p className="text-sm text-blue-200 mt-1 capitalize">{weather.weather[0]?.description}</p>
+                      </div>
+                      {weather.weather[0]?.icon && (
+                        <img
+                          src={`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`}
+                          alt={weather.weather[0].description}
+                          className="w-20 h-20"
+                        />
+                      )}
+                    </div>
+                  </div>
+                  <div className="rounded-3xl bg-white/10 border border-white/20 p-5 text-white">
+                    <p className="text-sm uppercase tracking-[0.18em] text-blue-200 mb-4">Détails</p>
+                    <p>Humidité : <span className="font-semibold">{weather.main.humidity}%</span></p>
+                    <p>Vent : <span className="font-semibold">{weather.wind.speed} m/s</span></p>
+                  </div>
+                  <div className="rounded-3xl bg-white/10 border border-white/20 p-5 text-white">
+                    <p className="text-sm uppercase tracking-[0.18em] text-blue-200 mb-4">Astuce</p>
+                    <p className="text-sm leading-relaxed">
+                      Vérifiez la météo avant de réserver. Les prévisions sont mises à jour toutes les 5 minutes.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <div className="rounded-3xl bg-white/10 border border-white/20 p-5 text-white">
+                  {weatherError || 'La météo est actuellement indisponible.'}
+                </div>
+              )}
             </div>
 
             {/* Stats rapides */}
@@ -347,16 +479,29 @@ export default function LandingPage() {
           </div>
 
           {/* Grille voitures */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredCars.map((car) => (
-              <CarCard key={car.id} car={car} onReserve={handleReserve} />
-            ))}
-          </div>
-
-          {filteredCars.length === 0 && (
-            <div className="text-center py-16 text-gray-400">
-              <p className="text-lg">Aucun véhicule dans cette catégorie pour le moment.</p>
+          {carsLoading ? (
+            <div className="text-center py-16 text-gray-500">
+              <p className="text-lg">Chargement des véhicules...</p>
             </div>
+          ) : (
+            <>
+              {carsError && (
+                <div className="text-center py-4 text-red-600">
+                  {carsError}
+                </div>
+              )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {filteredCars.map((car) => (
+                  <CarCard key={car.id} car={car} onReserve={handleReserve} />
+                ))}
+              </div>
+
+              {filteredCars.length === 0 && (
+                <div className="text-center py-16 text-gray-400">
+                  <p className="text-lg">Aucun véhicule dans cette catégorie pour le moment.</p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>

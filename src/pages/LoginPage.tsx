@@ -1,5 +1,4 @@
-// src/pages/LoginPage.tsx
-// Personne 2 — feature/auth-pages
+
 
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -13,7 +12,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError('');
 
@@ -23,7 +22,7 @@ export default function LoginPage() {
     }
 
     setLoading(true);
-    const result = login(email.trim(), password);
+    const result = await login(email.trim(), password);
     setLoading(false);
 
     if (!result.success) {
