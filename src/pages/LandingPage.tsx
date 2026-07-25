@@ -39,6 +39,8 @@ export default function LandingPage() {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(true);
   const [weatherError, setWeatherError] = useState('');
+  const [selectedCity, setSelectedCity] = useState('Dakar');
+  const [geoStatus, setGeoStatus] = useState('');
 
   const getNextDayDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -46,18 +48,42 @@ export default function LandingPage() {
     return date.toISOString().split('T')[0];
   };
 
-  const loadWeather = async () => {
+  const loadWeather = async (city = selectedCity, lat?: number, lon?: number) => {
     setWeatherLoading(true);
     setWeatherError('');
 
     try {
-      const data = await fetchJson<WeatherData>('/weather?city=Dakar');
+      const query = new URLSearchParams({ city });
+      if (lat !== undefined && lon !== undefined) {
+        query.set('lat', String(lat));
+        query.set('lon', String(lon));
+      }
+      const data = await fetchJson<WeatherData>(`/weather?${query.toString()}`);
       setWeather(data);
     } catch (error: any) {
       setWeatherError(error?.message || 'Impossible de récupérer la météo.');
     } finally {
       setWeatherLoading(false);
     }
+  };
+
+  const requestGeolocationWeather = () => {
+    if (!navigator.geolocation) {
+      setGeoStatus('Géolocalisation non prise en charge');
+      return;
+    }
+
+    setGeoStatus('Demande de position...');
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setGeoStatus('Position détectée');
+        loadWeather('Votre position', position.coords.latitude, position.coords.longitude);
+      },
+      () => {
+        setGeoStatus('Géolocalisation non autorisée, météo par défaut');
+      },
+    );
   };
 
   useEffect(() => {
@@ -86,6 +112,10 @@ export default function LandingPage() {
     loadCars();
     loadWeather();
   }, []);
+
+  useEffect(() => {
+    loadWeather(selectedCity);
+  }, [selectedCity]);
 
   // Filtrer les voitures par catégorie
   const filteredCars =
@@ -334,7 +364,30 @@ export default function LandingPage() {
             </div>
 
             {/* Météo */}
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-3xl mx-auto lg:mx-0">
+            <div className="mt-8 max-w-3xl mx-auto lg:mx-0">
+              <label className="mb-3 block text-sm font-semibold text-blue-100">
+                Ville météo
+              </label>
+              {geoStatus && (
+                <p className="mb-3 text-sm text-blue-100">{geoStatus}</p>
+              )}
+              <button
+                onClick={requestGeolocationWeather}
+                className="mb-4 rounded-xl border border-amber-400 bg-amber-400 px-4 py-2 text-sm font-semibold text-blue-900 transition hover:bg-amber-500"
+              >
+                Utiliser ma position
+              </button>
+              <select
+                value={selectedCity}
+                onChange={(e) => setSelectedCity(e.target.value)}
+                className="mb-4 rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-white outline-none"
+              >
+                <option value="Dakar" className="text-blue-900">Dakar</option>
+                <option value="Saint-Louis" className="text-blue-900">Saint-Louis</option>
+                <option value="Thiès" className="text-blue-900">Thiès</option>
+                <option value="Ziguinchor" className="text-blue-900">Ziguinchor</option>
+              </select>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {weatherLoading ? (
                 <div className="rounded-3xl bg-white/10 border border-white/20 p-5 text-white flex items-center justify-center">
                   Chargement de la météo...
@@ -374,6 +427,7 @@ export default function LandingPage() {
                   {weatherError || 'La météo est actuellement indisponible.'}
                 </div>
               )}
+              </div>
             </div>
 
             {/* Stats rapides */}

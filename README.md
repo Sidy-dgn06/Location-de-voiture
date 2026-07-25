@@ -11,6 +11,19 @@ Currently, two official plugins are available:
 
 The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
+## Configuration du backend
+
+La météo réelle nécessite une clé OpenWeather API.
+
+1. Copier `backend/.env.example` vers `backend/.env`.
+2. Remplir la valeur `OPENWEATHER_API_KEY` avec votre clé OpenWeather.
+3. Démarrer le backend depuis le dossier `backend` :
+   ```bash
+   npm run start:dev
+   ```
+
+Si la clé est manquante ou invalide, l’API retournera maintenant une erreur claire plutôt qu’une météo de secours.
+
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:

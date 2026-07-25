@@ -5,6 +5,12 @@ import { HttpService } from '@nestjs/axios';
 import { Cache } from 'cache-manager';
 import { firstValueFrom } from 'rxjs';
 
+interface WeatherQuery {
+  city?: string;
+  lat?: string;
+  lon?: string;
+}
+
 @Injectable()
 export class WeatherService {
   constructor(
@@ -13,26 +19,28 @@ export class WeatherService {
     private readonly configService: ConfigService,
   ) {}
 
-  async getWeather(city: string) {
+  async getWeather(city: string, query?: WeatherQuery) {
     const normalizedCity = city.trim().toLowerCase();
-    return this.cacheManager.wrap(`weather:${normalizedCity}`, async () => {
-      const apiKey = this.configService.get<string>('OPENWEATHER_API_KEY');
+    const cacheKey = query?.lat && query?.lon ? `weather:coords:${query.lat}:${query.lon}` : `weather:${normalizedCity}`;
+
+    return this.cacheManager.wrap(cacheKey, async () => {
+      const apiKey = this.configService.get<string>('OPENWEATHER_API_KEY')?.trim();
       if (!apiKey) {
-        return this.getFallbackWeather(normalizedCity || 'Dakar');
+        return this.getFallbackWeather(city);
       }
 
-      const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(
-        normalizedCity,
-      )}&units=metric&lang=fr&appid=${apiKey}`;
+      const url = query?.lat && query?.lon
+        ? `https://api.openweathermap.org/data/2.5/weather?lat=${encodeURIComponent(query.lat)}&lon=${encodeURIComponent(query.lon)}&units=metric&lang=fr&appid=${apiKey}`
+        : `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(normalizedCity)}&units=metric&lang=fr&appid=${apiKey}`;
 
       try {
         const response = await firstValueFrom(this.httpService.get(url));
         return response.data;
       } catch (error: any) {
         if (error?.response?.status === 401 || error?.response?.status === 403) {
-          return this.getFallbackWeather(normalizedCity || 'Dakar');
+          return this.getFallbackWeather(city);
         }
-        throw error;
+        return this.getFallbackWeather(city);
       }
     }, { ttl: 300 });
   }

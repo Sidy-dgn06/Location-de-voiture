@@ -6,7 +6,11 @@ export class WeatherController {
   constructor(private readonly weatherService: WeatherService) {}
 
   @Get()
-  async getWeather(@Query('city') city = 'Dakar') {
-    return this.weatherService.getWeather(city);
+  async getWeather(
+    @Query('city') city = 'Dakar',
+    @Query('lat') lat?: string,
+    @Query('lon') lon?: string,
+  ) {
+    return this.weatherService.getWeather(city, { city, lat, lon });
   }
 }
