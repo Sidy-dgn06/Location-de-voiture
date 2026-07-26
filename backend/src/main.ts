@@ -1,5 +1,6 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -9,8 +10,20 @@ async function bootstrap() {
     new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: true }),
   );
   app.enableCors({ origin: [process.env.FRONTEND_ORIGIN || 'http://localhost:5173'], credentials: true });
+
+  const config = new DocumentBuilder()
+    .setTitle('Location de Voitures API')
+    .setDescription('API pour la plateforme de location de voitures')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('docs', app, document);
+
   app.enableShutdownHooks();
   await app.listen(4000);
   console.log('Backend démarré sur http://localhost:4000');
+  console.log('Documentation Swagger disponible sur http://localhost:4000/docs');
 }
 bootstrap();
