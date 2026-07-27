@@ -31,18 +31,11 @@ Pour Render, ne pas committer de fichier `.env` : les variables d’environnemen
 ### Variables Render backend
 
 - `OPENWEATHER_API_KEY`
-- `DB_TYPE=mysql`
-- `DB_HOST=<host_mysql>`
-- `DB_PORT=3306`
-- `DB_USERNAME=<utilisateur_mysql>`
-- `DB_PASSWORD=<mot_de_passe_mysql>`
-- `DB_DATABASE=<nom_de_la_base>`
+- `DATABASE_PATH=backend/db/locationdevoitures.sqlite` (attention : SQLite n’est pas persistant en production)
 - `FRONTEND_ORIGIN=https://<ton-frontend>.onrender.com`
 - `TYPEORM_SYNC=true|false`
 - `TYPEORM_LOGGING=true|false`
 - `REDIS_URL` si tu veux activer Redis sur le cache
-
-> Si tu souhaites rester en SQLite pour le développement local, laisse `DB_TYPE` vide ou mets `sqlite` et garde `DATABASE_PATH=backend/db/locationdevoitures.sqlite`.
 
 ### Variables Render frontend
 
