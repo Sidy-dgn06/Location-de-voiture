@@ -1,0 +1,33 @@
+services:
+  - type: web_service
+    name: locationdevoitures-backend
+    env: node
+    root: backend
+    buildCommand: npm run build
+    startCommand: npm run start:prod
+    envVars:
+      - key: OPENWEATHER_API_KEY
+      - key: DB_TYPE
+        value: mysql
+      - key: DB_HOST
+        value: your-mysql-host
+      - key: DB_PORT
+        value: '3306'
+      - key: DB_USERNAME
+        value: your-mysql-user
+      - key: DB_PASSWORD
+        value: your-mysql-password
+      - key: DB_DATABASE
+        value: location_de_voiture_db
+      - key: FRONTEND_ORIGIN
+        value: https://your-frontend-service.onrender.com
+
+staticSites:
+  - type: static_site
+    name: locationdevoitures-frontend
+    root: .
+    buildCommand: npm run build
+    publishPath: dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://your-backend-service.onrender.com/api

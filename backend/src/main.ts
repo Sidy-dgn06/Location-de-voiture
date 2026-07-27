@@ -22,8 +22,9 @@ async function bootstrap() {
   SwaggerModule.setup('docs', app, document);
 
   app.enableShutdownHooks();
-  await app.listen(4000);
-  console.log('Backend démarré sur http://localhost:4000');
-  console.log('Documentation Swagger disponible sur http://localhost:4000/docs');
+  const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 4000;
+  await app.listen(port);
+  console.log(`Backend démarré sur http://localhost:${port}`);
+  console.log(`Documentation Swagger disponible sur http://localhost:${port}/docs`);
 }
 bootstrap();

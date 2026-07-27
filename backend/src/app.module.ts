@@ -37,13 +37,34 @@ import { MetricsMiddleware } from './monitoring/metrics.middleware';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: 'sqlite',
-        database: configService.get<string>('DATABASE_PATH', 'backend/db/locationdevoitures.sqlite'),
-        synchronize: configService.get<string>('TYPEORM_SYNC', 'true') === 'true',
-        logging: configService.get<string>('TYPEORM_LOGGING', 'false') === 'true',
-        entities: [User, Car, Reservation],
-      }),
+      useFactory: (configService: ConfigService) => {
+        const type = configService.get<string>('DB_TYPE', 'sqlite');
+        const common = {
+          synchronize: configService.get<string>('TYPEORM_SYNC', 'true') === 'true',
+          logging: configService.get<string>('TYPEORM_LOGGING', 'false') === 'true',
+          entities: [User, Car, Reservation],
+        };
+
+        if (type === 'mysql') {
+          return {
+            type: 'mysql',
+            host: configService.get<string>('DB_HOST', 'localhost'),
+            port: parseInt(configService.get<string>('DB_PORT', '3306'), 10),
+            username: configService.get<string>('DB_USERNAME', 'root'),
+            password: configService.get<string>('DB_PASSWORD', ''),
+            database: configService.get<string>('DB_DATABASE', 'locationdevoitures'),
+            charset: 'utf8mb4',
+            timezone: 'Z',
+            ...common,
+          };
+        }
+
+        return {
+          type: 'sqlite',
+          database: configService.get<string>('DATABASE_PATH', 'backend/db/locationdevoitures.sqlite'),
+          ...common,
+        };
+      },
     }),
     AuthModule,
     UsersModule,

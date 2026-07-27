@@ -24,6 +24,34 @@ La météo réelle nécessite une clé OpenWeather API.
 
 Si la clé est manquante ou invalide, l’API retournera maintenant une erreur claire plutôt qu’une météo de secours.
 
+## Déploiement sur Render
+
+Pour Render, ne pas committer de fichier `.env` : les variables d’environnement doivent être définies dans l’interface Render ou via `render.yaml`.
+
+### Variables Render backend
+
+- `OPENWEATHER_API_KEY`
+- `DB_TYPE=mysql`
+- `DB_HOST=<host_mysql>`
+- `DB_PORT=3306`
+- `DB_USERNAME=<utilisateur_mysql>`
+- `DB_PASSWORD=<mot_de_passe_mysql>`
+- `DB_DATABASE=<nom_de_la_base>`
+- `FRONTEND_ORIGIN=https://<ton-frontend>.onrender.com`
+- `TYPEORM_SYNC=true|false`
+- `TYPEORM_LOGGING=true|false`
+- `REDIS_URL` si tu veux activer Redis sur le cache
+
+> Si tu souhaites rester en SQLite pour le développement local, laisse `DB_TYPE` vide ou mets `sqlite` et garde `DATABASE_PATH=backend/db/locationdevoitures.sqlite`.
+
+### Variables Render frontend
+
+- `VITE_API_BASE_URL=https://<ton-backend>.onrender.com/api`
+
+### Remarque
+
+Le backend expose l’API sur `/api` et le frontend doit pointer vers `VITE_API_BASE_URL`.
+
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
