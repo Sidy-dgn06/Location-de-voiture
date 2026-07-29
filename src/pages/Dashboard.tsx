@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from "recharts";
 import { cars, reservations, dashboardStats } from '../data/mockData';
 import { getUsers, deleteUserById, updateUserRole, updateUserPassword } from '../utils/auth';
+import { API_BASE_URL } from '../utils/api';
 
 const monthlyData = [
   { month: "Jan", revenus: 850000, reservations: 12 },
@@ -43,8 +44,52 @@ const stats = [
   { label: "Revenus (FCFA)",     value: dashboardStats.totalRevenue.toLocaleString("fr-FR"), change: "+6%", up: true, icon: "💰" },
 ];
 
+const parsePrometheusMetrics = (text: string) => {
+  return text
+    .split('\n')
+    .filter(line => line && !line.startsWith('#'))
+    .reduce<Record<string, string>>((acc, line) => {
+      const index = line.lastIndexOf(' ');
+      if (index > 0) {
+        const key = line.substring(0, index).trim();
+        const value = line.substring(index + 1).trim();
+        acc[key] = value;
+      }
+      return acc;
+    }, {});
+};
+
 // ── Component ──────────────────────────────────────────────────────────────
 export default function Dashboard() {
+  const [metricsData, setMetricsData] = useState<Record<string, string>>({});
+  const [metricsError, setMetricsError] = useState<string | null>(null);
+  const [metricsLoading, setMetricsLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadMetrics() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/metrics`, { credentials: 'include' });
+        if (!response.ok) {
+          throw new Error(`Erreur ${response.status}`);
+        }
+        const text = await response.text();
+        setMetricsData(parsePrometheusMetrics(text));
+      } catch (error: any) {
+        setMetricsError(error?.message || 'Impossible de charger les métriques');
+      } finally {
+        setMetricsLoading(false);
+      }
+    }
+
+    loadMetrics();
+  }, []);
+
+  const totalHttpRequests = Object.entries(metricsData)
+    .filter(([key]) => key.startsWith('http_requests_total'))
+    .reduce((sum, [, value]) => sum + Number(value), 0);
+
+  const cpuUserSeconds = Number(metricsData['process_cpu_user_seconds_total'] ?? '0');
+  const heapUsedBytes = Number(metricsData['process_resident_memory_bytes'] ?? metricsData['nodejs_heap_used_bytes'] ?? '0');
   const [activeTab, setActiveTab] = useState("overview");
   const [filterStatus, setFilterStatus] = useState("tous");
   const [users, setUsers] = useState(() => getUsers());
@@ -131,7 +176,7 @@ export default function Dashboard() {
           {activeTab === "overview" && (
             <>
               {/* Stat cards */}
-              <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 xl:grid-cols-4 gap-4">
                 {stats.map(s => (
                   <div key={s.label} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
                     <div className="flex items-center justify-between mb-3">
@@ -144,6 +189,35 @@ export default function Dashboard() {
                     </p>
                   </div>
                 ))}
+                <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <p className="text-xs text-slate-500 font-medium">Métriques backend</p>
+                      <h3 className="text-sm font-semibold text-slate-800">Prometheus</h3>
+                    </div>
+                    <span className="text-xl">📈</span>
+                  </div>
+                  {metricsLoading ? (
+                    <p className="text-sm text-slate-500">Chargement...</p>
+                  ) : metricsError ? (
+                    <p className="text-sm text-red-500">{metricsError}</p>
+                  ) : (
+                    <div className="space-y-3 text-sm text-slate-700">
+                      <div className="flex items-center justify-between">
+                        <span>Total requêtes</span>
+                        <span className="font-semibold">{totalHttpRequests.toLocaleString('fr-FR')}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span>CPU utilisateur</span>
+                        <span className="font-semibold">{cpuUserSeconds.toFixed(2)} s</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span>Mémoire résidente</span>
+                        <span className="font-semibold">{(heapUsedBytes / 1024 / 1024).toFixed(1)} MB</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Line chart - Revenus */}

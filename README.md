@@ -45,6 +45,43 @@ Pour Render, ne pas committer de fichier `.env` : les variables d’environnemen
 
 Le backend expose l’API sur `/api` et le frontend doit pointer vers `VITE_API_BASE_URL`.
 
+## Docker et backend
+
+- Le frontend est packagé avec Vite et servi par Nginx.
+- Le backend utilise NestJS et écoute sur `process.env.PORT || 4000`.
+- Pour travailler localement, utilise `backend/.env` pour la config et `npm run start:dev` depuis `backend`.
+- `backend/dist` est un artefact de build, il ne doit pas être commité.
+
+## Monitoring avec Prometheus et Grafana
+
+Le backend expose un endpoint Prometheus sur `/api/metrics`.
+
+1. Ajouter une cible Prometheus dans `prometheus.yml` :
+   ```yaml
+   scrape_configs:
+     - job_name: 'location-de-voitures-backend'
+       static_configs:
+         - targets: ['<backend-host>:4000']
+       metrics_path: '/api/metrics'
+   ```
+
+2. Redémarrer Prometheus.
+
+3. Dans Grafana, ajouter Prometheus comme source de données.
+
+4. Quelques requêtes utiles :
+   - `http_requests_total`
+   - `http_requests_total{method="GET"}`
+   - `process_cpu_user_seconds_total`
+   - `nodejs_memory_heap_used_bytes`
+
+5. Exemple de dashboards Grafana :
+   - taux de requêtes par route
+   - latence et erreurs HTTP
+   - métriques du processus Node.js
+
+> Si vous utilisez un reverse proxy ou un déploiement avec un préfixe API différent, adaptez `metrics_path` en conséquence.
+
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
